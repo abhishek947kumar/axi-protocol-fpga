@@ -1,0 +1,67 @@
+name: AXI4 Protocol Subsystem CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  lint-and-verify:
+    name: RTL Syntax & Lint Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Icarus Verilog & Verilator
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog verilator
+
+      - name: Check RTL Syntax with Icarus Verilog
+        run: |
+          echo "================================================================="
+          echo " Compiling RTL Modules with Icarus Verilog (-g2001)"
+          echo "================================================================="
+          iverilog -g2001 -Irtl -o /dev/null \
+            rtl/axi4_slave_bram.v \
+            rtl/axi4_lite_slave_reg.v \
+            rtl/axi4_to_axilite_bridge.v \
+            rtl/axi4_interconnect_1x2.v \
+            rtl/axi4_master.v \
+            rtl/axi_soc_top.v
+
+      - name: Lint RTL with Verilator
+        run: |
+          echo "================================================================="
+          echo " Linting RTL Subsystem with Verilator"
+          echo "================================================================="
+          verilator --lint-only -Wall \
+            -Wno-DECLFILENAME -Wno-PINMISSING -Wno-UNOPTFLAT -Wno-WIDTH -Wno-UNUSED \
+            -Irtl \
+            rtl/axi_pkg.vh \
+            rtl/axi4_slave_bram.v \
+            rtl/axi4_lite_slave_reg.v \
+            rtl/axi4_to_axilite_bridge.v \
+            rtl/axi4_interconnect_1x2.v \
+            rtl/axi4_master.v \
+            rtl/axi_soc_top.v \
+            --top-module axi_soc_top
+
+      - name: Verify Verification Testbench Syntax
+        run: |
+          echo "================================================================="
+          echo " Checking Testbench Syntax with SystemVerilog Parser"
+          echo "================================================================="
+          iverilog -g2012 -Irtl -o /dev/null \
+            rtl/axi4_slave_bram.v \
+            rtl/axi4_lite_slave_reg.v \
+            rtl/axi4_to_axilite_bridge.v \
+            rtl/axi4_interconnect_1x2.v \
+            rtl/axi4_master.v \
+            rtl/axi_soc_top.v \
+            tb/axi_protocol_checker.sv \
+            tb/tb_axi_top.sv

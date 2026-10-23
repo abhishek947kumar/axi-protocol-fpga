@@ -1,0 +1,39 @@
+# ==============================================================================
+# Git Ignore Configuration for Vivado & EDA Projects
+# ==============================================================================
+
+# Vivado EDA Run & Temporary Log Files
+*.jou
+*.log
+*.pb
+*.str
+*.backup.*
+*.backup
+.Xil/
+xsim.dir/
+webtalk*
+xelab*
+xvlog*
+xsim*
+hd_visual/
+
+# Large Binary Simulation Waveforms (generated on demand via scripts/run_sim.bat)
+*.wdb
+*.vcd
+
+# Vivado GUI Auto-Generated Project Caches & Run Files
+vivado_project/*.cache/
+vivado_project/*.hw/
+vivado_project/*.ip_user_files/
+vivado_project/*.runs/
+vivado_project/*.sim/
+
+# Temporary and Scratch Directories
+scratch/
+tmp/
+.vscode/
+
+# Ensure generated synthesis reports and directories are preserved
+!synth_output/*.rpt
+!sim_output/.gitkeep
+!synth_output/.gitkeep
