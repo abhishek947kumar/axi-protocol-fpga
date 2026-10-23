@@ -1,6 +1,6 @@
 # AMBA AXI4 High-Performance Protocol Subsystem on FPGA
 
-[![CI Status](https://img.shields.io/badge/CI-Passing-brightgreen.svg?logo=github-actions)](https://github.com/)
+[![CI Status](https://img.shields.io/badge/CI-Passing-brightgreen.svg?logo=github-actions)](https://github.com/abhishek947kumar/axi-protocol-fpga/actions)
 [![Vivado](https://img.shields.io/badge/Vivado-2019.2%2B-blue.svg?logo=xilinx)](https://www.xilinx.com/products/design-tools/vivado.html)
 [![RTL Standard](https://img.shields.io/badge/RTL-Verilog--2001-green.svg)]()
 [![Verification](https://img.shields.io/badge/Verification-SystemVerilog--SVA-purple.svg)]()
@@ -80,16 +80,25 @@ The AMBA AXI4 protocol separates data movement into **five independent channels*
 The design strictly adheres to Section A3.4 of the AMBA AXI4 Specification (ARM IHI0022E):
 
 | Burst Type | Encoding | Address Progression Formula | System Application |
-| :--- | :--- | :--- | :--- |
-| **FIXED** | `2'b00` | $\text{Addr}_N = \text{Start\_Addr}$ | FIFO and streaming peripheral access |
-| **INCR** | `2'b01` | $\text{Addr}_N = \text{Addr}_{N-1} + 2^{\text{AxSIZE}}$ | Sequential memory DMA transfers |
-| **WRAP** | `2'b10` | $\text{Addr}_N = \text{Wrap\_Boundary} + (\text{Addr}_{N-1} + 2^{\text{AxSIZE}}) \pmod{\text{Total\_Bytes}}$ | CPU cacheline fill (critical word first) |
+| :--- | :---: | :--- | :--- |
+| **FIXED** | `2'b00` | `Addr_N = Start_Address` | FIFO and streaming peripheral access |
+| **INCR** | `2'b01` | `Addr_N = Addr_(N-1) + (1 << AxSIZE)` | Sequential memory DMA transfers |
+| **WRAP** | `2'b10` | `Addr_N = Wrap_Boundary + ((Addr_(N-1) + (1 << AxSIZE)) % Total_Bytes)` | CPU cacheline fill (critical word first) |
 
 ### Single-Cycle WRAP Boundary Hardware Optimization
-In traditional designs, WRAP boundary calculations use hardware dividers:
-$$\text{Wrap\_Boundary} = \left\lfloor \frac{\text{Start\_Address}}{\text{Total\_Bytes}} \right\rfloor \times \text{Total\_Bytes}$$
-Because AMBA AXI restricts WRAP burst lengths to power-of-2 beats ($2, 4, 8, 16$), $\text{Total\_Bytes}$ is always a power of 2 ($2^K$). This implementation optimizes the divider into a **single-cycle bitwise AND mask**, eliminating DSP slices and latency:
-$$\text{Wrap\_Boundary} = \text{Address} \ \& \ \sim(\text{Total\_Bytes} - 1)$$
+
+In traditional reference designs, WRAP boundary calculations rely on hardware division and multiplication:
+
+```text
+Wrap_Boundary = floor(Start_Address / Total_Bytes) * Total_Bytes
+```
+
+Because AMBA AXI4 restricts WRAP burst lengths strictly to power-of-2 beats (2, 4, 8, 16 beats), `Total_Bytes = (1 << AxSIZE) * AxLEN` is **always a power of 2** (`2^K`). This implementation replaces the expensive divider and multiplier with a **single-cycle bitwise AND mask**, eliminating DSP48 slices and multi-cycle latency:
+
+```verilog
+// Single-cycle power-of-2 WRAP boundary calculation (0 DSPs, 1 cycle)
+Wrap_Boundary = Address & ~(Total_Bytes - 1);
+```
 
 ---
 
@@ -161,8 +170,8 @@ Synthesized with **Vivado 2019.2** targeting the **Xilinx Artix-7 FPGA (`xc7a35t
 
 | Resource / Parameter | Available | Used | Utilization % |
 | :--- | :--- | :--- | :--- |
-| **Target Clock** | 100.00 MHz ($T = 10.0\text{ ns}$) | **106.4 MHz** | **Timing Met** |
-| **Worst Negative Slack (WNS)** | $\ge 0.000\text{ ns}$ | **+0.605 ns** | **Positive Slack** |
+| **Target Clock** | 100.00 MHz (Period = 10.0 ns) | **106.4 MHz** | **Timing Met** |
+| **Worst Negative Slack (WNS)** | >= 0.000 ns | **+0.605 ns** | **Positive Slack** |
 | **Total Failing Endpoints (TNS)**| 0 | **0** | **0 Violations** |
 | **Slice LUTs** | 20,800 | **12,373** | **59.49%** |
 | **Slice Registers** | 41,600 | **17,542** | **42.17%** |

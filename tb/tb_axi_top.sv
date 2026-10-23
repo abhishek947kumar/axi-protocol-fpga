@@ -234,12 +234,15 @@ module tb_axi_top;
     // -------------------------------------------------------------------------
     // Main Verification Flow
     // -------------------------------------------------------------------------
-    reg [31:0] rd_data_val;
-    reg [1:0]  rd_resp_val;
-    integer i;
+    reg [31:0] rd_data_val = 32'h0;
+    reg [1:0]  rd_resp_val = 2'b00;
+    integer i = 0;
 
     initial begin
         // Signal Initialization
+        rd_data_val  = 32'h0;
+        rd_resp_val  = 2'b00;
+        i            = 0;
         cmd_wr_start = 1'b0;
         cmd_wr_addr  = 32'h0;
         cmd_wr_len   = 8'h0;
