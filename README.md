@@ -34,6 +34,12 @@ graph TD
     S1 -->|LEDs & Diagnostics| HW[Status LEDs: Heartbeat / Activity / Done / Error]
 ```
 
+<p align="center">
+  <img src="docs/images/vivado_project_manager.png" alt="Vivado Project Hierarchy" width="850">
+  <br>
+  <em>Figure 1: Vivado 2019.2 Project Manager - Integrated AXI4 SoC Subsystem Hierarchy targeting Artix-7 (xc7a35tcsg324-1)</em>
+</p>
+
 ---
 
 ## 📡 AMBA AXI4 Channel Specifications
@@ -133,6 +139,20 @@ The testbench ([`tb/tb_axi_top.sv`](tb/tb_axi_top.sv)) includes a self-checking 
 | **20** | Full-Duplex Concurrent Read | Overlapping bidirectional transfer on bus channels | Read Complete, `OKAY` | **PASSED** |
 | **21** | Concurrent Data Integrity | Validate written memory payload after full-duplex burst| `0xF00D0000`, `OKAY` | **PASSED** |
 
+### 📸 Behavioral Simulation Waveforms
+
+<p align="center">
+  <img src="docs/images/vivado_simulation_waveform_write.png" alt="AXI4 Write and Read Burst Waveforms" width="850">
+  <br>
+  <em>Figure 2: Multi-Beat Burst Transactions & Concurrent Read/Write Channels in Vivado XSIM</em>
+</p>
+
+<p align="center">
+  <img src="docs/images/vivado_simulation_waveform_verify.png" alt="Scoreboard and Test Pass Counters" width="850">
+  <br>
+  <em>Figure 3: Scoreboard Test Execution & Verification Counters (21/21 Tests Passed, 0 Failures)</em>
+</p>
+
 ---
 
 ## ⚡ FPGA Synthesis & Timing Closure
@@ -199,6 +219,8 @@ axi-protocol-fpga/
 │   │   ├── bug_report.md               # GitHub Issue template for bug reports
 │   │   └── feature_request.md          # GitHub Issue template for feature requests
 │   └── PULL_REQUEST_TEMPLATE.md        # Pull request template with SVA checklist
+├── docs/
+│   └── images/                         # Waveform traces & Vivado project screenshots
 ├── rtl/
 │   ├── axi_pkg.vh                      # Protocol constants, burst encodings, memory map
 │   ├── axi4_master.v                   # Full AXI4 Master Engine (1-256 beat bursts)
